@@ -14,6 +14,8 @@ type Options struct {
 	// ChannelNameFunc allow to create custom channel names.
 	// Default channel name is the request path.
 	ChannelNameFunc func(*http.Request) string
+	// OnCloseChannelFunc will be called on channel close if set
+	OnClientDisconnectFunc func(string)
 	// All usage logs end up in Logger
 	Logger *log.Logger
 }

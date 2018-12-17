@@ -81,6 +81,9 @@ func (s *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) 
 		go func() {
 			<-closeNotify
 			s.removeClient <- c
+			if s.options.OnClientDisconnectFunc != nil {
+				s.options.OnClientDisconnectFunc(c.channel)
+			}
 		}()
 
 		response.WriteHeader(http.StatusOK)
