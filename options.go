@@ -1,9 +1,14 @@
 package sse
 
 import (
-	"log"
 	"net/http"
 )
+
+// LoggerInterface - Logger in Options should implement it
+type LoggerInterface interface {
+	Print(v ...interface{})
+	Printf(format string, v ...interface{})
+}
 
 // Options holds server configurations.
 type Options struct {
@@ -17,7 +22,7 @@ type Options struct {
 	// OnCloseChannelFunc will be called on channel close if set
 	OnClientDisconnectFunc func(string)
 	// All usage logs end up in Logger
-	Logger *log.Logger
+	Logger LoggerInterface
 }
 
 func (opt *Options) hasHeaders() bool {
