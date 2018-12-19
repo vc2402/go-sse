@@ -4,21 +4,27 @@ package sse
 type Client struct {
 	lastEventID,
 	channel string
-	send chan *Message
+	name    string
+	send    chan *Message
+	version int
 }
 
-func newClient(lastEventID, channel string) *Client {
+func newClient(lastEventID, channel string, name string, version int) *Client {
 	return &Client{
 		lastEventID,
 		channel,
+		name,
 		make(chan *Message),
+		version,
 	}
 }
 
 // SendMessage sends a message to client.
 func (c *Client) SendMessage(message *Message) {
-	c.lastEventID = message.id
-	c.send <- message
+	if message.version <= c.version {
+		c.lastEventID = message.id
+		c.send <- message
+	}
 }
 
 // Channel returns the channel where this client is subscribe to.

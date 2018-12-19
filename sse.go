@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 // Server represents a server sent events server.
@@ -66,15 +67,17 @@ func (s *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) 
 		h.Set("Connection", "keep-alive")
 
 		var channelName string
+		var clientName string
+		var version int
 
 		if s.options.ChannelNameFunc == nil {
 			channelName = request.URL.Path
 		} else {
-			channelName = s.options.ChannelNameFunc(request)
+			channelName, clientName, version = s.options.ChannelNameFunc(request)
 		}
 
 		lastEventID := request.Header.Get("Last-Event-ID")
-		c := newClient(lastEventID, channelName)
+		c := newClient(lastEventID, channelName, clientName, version)
 		s.addClient <- c
 		closeNotify := response.(http.CloseNotifier).CloseNotify()
 
@@ -82,7 +85,7 @@ func (s *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) 
 			<-closeNotify
 			s.removeClient <- c
 			if s.options.OnClientDisconnectFunc != nil {
-				s.options.OnClientDisconnectFunc(c.channel)
+				s.options.OnClientDisconnectFunc(c.channel, c.name)
 			}
 		}()
 
@@ -102,15 +105,24 @@ func (s *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) 
 // SendMessage broadcast a message to all clients in a channel.
 // If channel is an empty string, it will broadcast the message to all channels.
 func (s *Server) SendMessage(channel string, message *Message) {
+	s.SendMessageToClient(channel, "", message)
+}
+
+// SendMessageToClient send a message to specified client in a channel.
+// If channel is an empty string, it will broadcast the message to all channels.
+// If client is empty string, it will broadcast message to all clients in the channel
+func (s *Server) SendMessageToClient(channel string, client string, message *Message) {
 	if len(channel) == 0 {
-		s.options.Logger.Print("broadcasting message to all channels.")
+		if message.event != "heartbeat" {
+			s.options.Logger.Print("broadcasting message to all channels.")
+		}
 
 		for _, ch := range s.channels {
-			ch.SendMessage(message)
+			ch.SendMessage(client, message)
 		}
 	} else if _, ok := s.channels[channel]; ok {
 		s.options.Logger.Printf("message sent to channel '%s'.", channel)
-		s.channels[channel].SendMessage(message)
+		s.channels[channel].SendMessage(client, message)
 	} else {
 		s.options.Logger.Printf("message not sent because channel '%s' has no clients.", channel)
 	}
@@ -228,6 +240,10 @@ func (s *Server) dispatch() {
 
 			s.options.Logger.Print("server stopped.")
 			return
+		case <-time.After(15 * time.Second):
+			if s.options.Heartbeat {
+				s.SendMessage("", "", &Message{event: "heartbeat"})
+			}
 		}
 	}
 }

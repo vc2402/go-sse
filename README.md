@@ -3,7 +3,7 @@
 Server-Sent Events for Go
 
 ## About
-This project is fork of [go-sse](https://goreportcard.com/report/github.com/alexandrevicenzi/go-sse). The only differences so far are Client disconnect callback and possibility to set not a standard logger
+This project is fork of [go-sse](https://goreportcard.com/report/github.com/alexandrevicenzi/go-sse). The defferences are: possibility to send message to specified client, Client disconnect callback and possibility to set not a standard logger, specifying protocol version (message will be send only to clients with version not lower than message's version)
 
 [Server-sent events](http://www.html5rocks.com/en/tutorials/eventsource/basics/) is a method of continuously sending data from a server to the browser, rather than repeatedly requesting it, replacing the "long polling way".
 
@@ -15,6 +15,9 @@ It's [supported](http://caniuse.com/#feat=eventsource) by all major browsers and
 
 - Multiple channels (isolated)
 - Broadcast message to all channels
+- Individual message to specified client
+- Naming of clients
+- Client's protocol version
 - Custom headers (useful for CORS)
 - `Last-Event-ID` support (resend lost messages)
 - [Follow SSE specification](https://html.spec.whatwg.org/multipage/comms.html#server-sent-events)

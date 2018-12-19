@@ -24,6 +24,7 @@ func TestMessage(t *testing.T) {
 		"test",
 		"myevent",
 		10 * 1000,
+		0,
 	}
 
 	if msg.String() != "id: 123\nretry: 10000\nevent: myevent\ndata: test\n\n" {

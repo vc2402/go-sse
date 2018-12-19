@@ -4,24 +4,30 @@ package sse
 type Channel struct {
 	lastEventID,
 	name string
-	clients map[*Client]bool
+	clients map[string]*Client
 }
 
 func newChannel(name string) *Channel {
 	return &Channel{
 		"",
 		name,
-		make(map[*Client]bool),
+		make(map[string]*Client),
 	}
 }
 
 // SendMessage broadcast a message to all clients in a channel.
-func (c *Channel) SendMessage(message *Message) {
-	c.lastEventID = message.id
+func (c *Channel) SendMessage(name string, message *Message) {
+	if name != "" {
+		if cl, ok := c.clients[name]; ok {
+			cl.SendMessage(message)
+		}
+	} else {
+		c.lastEventID = message.id
 
-	for c, open := range c.clients {
-		if open {
-			c.send <- message
+		for _, cl := range c.clients {
+			if cl != nil {
+				cl.SendMessage(message)
+			}
 		}
 	}
 }
@@ -29,7 +35,7 @@ func (c *Channel) SendMessage(message *Message) {
 // Close closes the channel and disconnect all clients.
 func (c *Channel) Close() {
 	// Kick all clients of this channel.
-	for client := range c.clients {
+	for _, client := range c.clients {
 		c.removeClient(client)
 	}
 }
@@ -45,11 +51,11 @@ func (c *Channel) LastEventID() string {
 }
 
 func (c *Channel) addClient(client *Client) {
-	c.clients[client] = true
+	c.clients[client.name] = client
 }
 
 func (c *Channel) removeClient(client *Client) {
-	c.clients[client] = false
+	c.clients[client.name] = nil
 	close(client.send)
-	delete(c.clients, client)
+	delete(c.clients, client.name)
 }

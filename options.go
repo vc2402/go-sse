@@ -18,11 +18,13 @@ type Options struct {
 	Headers map[string]string
 	// ChannelNameFunc allow to create custom channel names.
 	// Default channel name is the request path.
-	ChannelNameFunc func(*http.Request) string
+	ChannelNameFunc func(*http.Request) (chName string, clientName string, version int)
 	// OnCloseChannelFunc will be called on channel close if set
-	OnClientDisconnectFunc func(string)
+	OnClientDisconnectFunc func(chName string, clientName string)
 	// All usage logs end up in Logger
 	Logger LoggerInterface
+	// Send heartbeat message every 15 seconds
+	Heartbeat bool
 }
 
 func (opt *Options) hasHeaders() bool {

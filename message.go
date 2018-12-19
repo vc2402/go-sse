@@ -11,11 +11,16 @@ type Message struct {
 	id,
 	data,
 	event string
-	retry int
+	retry   int
+	version int
 }
 
 func SimpleMessage(data string) *Message {
 	return NewMessage("", data, "")
+}
+
+func SimpleMessageVer(data string, version int) *Message {
+	return NewMessageVer("", data, "", version)
 }
 
 func NewMessage(id, data, event string) *Message {
@@ -24,6 +29,17 @@ func NewMessage(id, data, event string) *Message {
 		data,
 		event,
 		0,
+		0,
+	}
+}
+
+func NewMessageVer(id, data, event string, version int) *Message {
+	return &Message{
+		id,
+		data,
+		event,
+		0,
+		version,
 	}
 }
 
