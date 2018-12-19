@@ -242,7 +242,7 @@ func (s *Server) dispatch() {
 			return
 		case <-time.After(15 * time.Second):
 			if s.options.Heartbeat {
-				s.SendMessage("", "", &Message{event: "heartbeat"})
+				s.SendMessage("", &Message{event: "heartbeat"})
 			}
 		}
 	}
